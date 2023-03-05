@@ -5,9 +5,9 @@ private:
    float radius = 40;
 public:
 
-   int x;
-   int y;
-   bool isAlive;
+   int x{};
+   int y{};
+   bool isAlive = true;
    bool queen = false;
    sf::Color color;
 

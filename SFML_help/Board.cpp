@@ -83,7 +83,12 @@ void Setup(sf::RenderWindow& window, Cheacker* RedCheacker, Cheacker* WhiteCheac
 
    }
 }
-
+/*
+* Принимает: положение шашки, в целочисленных координатах x, y
+* Ищет эту шашку на поле
+* Выдаёт: если она есть, возвращает ссылку на неё, если нет, ноль
+* p.s. для упрощения логики нужно добавить сюда проверку на то, находится ли шашка в рамках поля
+*/
 Cheacker* FindChecker(int x, int y, Cheacker* RedChecker, Cheacker* WhiteChecker) {
    for (int i = 0; i < 12; i++) {
       if (RedChecker[i].x == x && RedChecker[i].y == y) {
@@ -99,6 +104,28 @@ Cheacker* FindChecker(int x, int y, Cheacker* RedChecker, Cheacker* WhiteChecker
    }
    return NULL;
 }
+/*
+* Принимает: положение шашки, в целочисленных координатах x, y
+* Ищет эту шашку на поле
+* Выдаёт: если она есть, возвращает true, если нет, false
+* p.s. для упрощения логики нужно добавить сюда проверку на то, находится ли шашка в рамках поля
+*/
+bool boolFindChecker(int x, int y, Cheacker* RedChecker, Cheacker* WhiteChecker) {
+    for (int i = 0; i < 12; i++) {
+        if (RedChecker[i].x == x && RedChecker[i].y == y) {
+            if (RedChecker[i].isAlive) {
+                return true;
+            }
+        }
+        if (WhiteChecker[i].x == x && WhiteChecker[i].y == y) {
+            if (WhiteChecker[i].isAlive) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 //void ocenochnaya(std::string color) {
 //   static int toWin_red = 0;
 //   static int toWin_white = 0;
@@ -113,7 +140,12 @@ Cheacker* FindChecker(int x, int y, Cheacker* RedChecker, Cheacker* WhiteChecker
 //   }
 //}
 
-
+/*--------------------Убийство, матюки и голые сиськи---------------------------*/
+/*
+* Принимает: положение шашки, в целочисленных координатах x, y
+* Убивает её нахуй
+* Возврашает: светлую память (void)
+*/
 void KillCheacker(int x, int y, Cheacker* RedChecker, Cheacker* WhiteChecker, int* turn) {
   if (FindChecker(x, y, RedChecker, WhiteChecker)->color == sf::Color::Red) {
       //std::cout << "red";
@@ -126,6 +158,89 @@ void KillCheacker(int x, int y, Cheacker* RedChecker, Cheacker* WhiteChecker, in
   FindChecker(x, y, RedChecker, WhiteChecker)->isAlive = false;
   *turn = ((*turn == 1) ? 2 : 1);
    return;
+}
+/*
+* Прегрузка без ебучей смены хода
+* Принимает: положение шашки, в целочисленных координатах x, y
+* Убивает её нахуй
+* Возврашает: светлую память (void)
+*/
+void KillCheacker(int x, int y, Cheacker* RedChecker, Cheacker* WhiteChecker) {
+    FindChecker(x, y, RedChecker, WhiteChecker)->isAlive = false;
+    return;
+}
+/*
+* Прегрузка без ебучей смены хода
+* Принимает: положение шашки, в целочисленных координатах x, y
+* Убивает её нахуй
+* Возврашает: светлую память (void)
+*/
+void KillCheacker(Cheacker* toKill) {
+    toKill->isAlive = false;
+    return;
+}
+/*
+* Принимает: структуру с положением шашки и её хода
+* Ищет шашку между текушем и предыдушем ходом
+* возвращает: Указатель на неё
+*/
+Cheacker* FindMidleCheaker(pos* posCur, Cheacker* RedChecker, Cheacker* WhiteChecker) {
+    int midX{ abs(posCur->current_x - posCur->next_x) }, midY{ abs(posCur->current_y - posCur->next_y) };
+    if (midX > 1 && midY > 1 && boolFindChecker(midX / 2, midY / 2, RedChecker, WhiteChecker) &&
+        FindChecker(posCur->current_x, posCur->current_y, RedChecker, WhiteChecker)->color != FindChecker(midX / 2, midY / 2, RedChecker, WhiteChecker)->color) {
+        return(FindChecker(midX / 2, midY / 2, RedChecker, WhiteChecker));
+    }
+    return nullptr;
+}
+// Возникает вопрос, зачем нужно было выводить eqalFunction, кроме как для отладки, а если их удалить... зачем эта функция?
+/*--------------------конец блока---------------------------*/
+
+/*
+* Принимает: структуру с положением шашки и её хода, размер поля, стандартно 8
+* Находиться ли шашка и её ход в рамках поля
+* Выдаёт: переменную логического типа, которая показывает, находиться ли позиция и последующий ход в рамках поля
+*/
+bool inField(pos* posCur, int sizeField=8) {
+    return (posCur->current_x < sizeField && posCur->current_x >= 0 && posCur->current_y < sizeField && posCur->current_y >= 0
+        && posCur->next_x < sizeField && posCur->next_x >= 0 && posCur->next_y < sizeField && posCur->next_y >= 0
+        );
+}
+/*
+* Принимает: структуру с положением шашки и её хода
+* Свободна ли клетка в которую мы хотим сделать ход
+* Выдаёт: переменную логического типа, свободно или нет
+*/
+bool isFreeNextPos(pos* posCur, Cheacker* RedChecker, Cheacker* WhiteChecker, int sizeField = 8) {
+    return boolFindChecker(posCur->next_x, posCur->next_y, RedChecker, WhiteChecker);
+}
+/*
+* Принимает: структуру с положением шашки и её хода, струкутры с перечеслением шашек на поле и их атрибутов
+* Проверяет, доступен ли ход, который совершает пользователь
+* Выдаёт: можем ли сделать ход
+*/
+bool canMove(pos* posCur, Cheacker* RedChecker, Cheacker* WhiteChecker) {
+    if (inField(posCur)&& isFreeNextPos(posCur, RedChecker, WhiteChecker) || FindMidleCheaker(posCur, RedChecker, WhiteChecker)!=nullptr) {
+        return true;
+    }
+     return false;
+}
+/*
+* Принимает: структуру с положением шашки и её хода, струкутры с перечеслением шашек на поле и их атрибутов
+* Делает ход
+* Выдаёт: -
+*/
+void Move(pos* posCur, Cheacker* RedChecker, Cheacker* WhiteChecker) {
+    Cheacker* cur;
+    Cheacker* mid;
+    mid = FindMidleCheaker(posCur, RedChecker, WhiteChecker);
+    cur = FindChecker(posCur->current_x, posCur->current_y, RedChecker, WhiteChecker); // делаем текущую шашку
+    if (canMove(posCur, RedChecker, WhiteChecker)) {
+        cur->x = posCur->next_x;
+        cur->y = posCur->next_y;
+        if (mid != nullptr) {
+            KillCheacker(mid);
+        }
+    }
 }
 
 int MoveChecker(int x, int y, Cheacker* s_checker, Cheacker* RedChecker, Cheacker* WhiteChecker, int* turn) {
@@ -208,7 +323,11 @@ int MoveChecker(int x, int y, Cheacker* s_checker, Cheacker* RedChecker, Cheacke
    return 0;
 }
 
-
+/*
+* Принимает: Red - массив шашек красного цвета, White - массив шашек белого цвета, alpha - нижняя альфа граница, beta - верхняя бета граница, humanTurn - ход ли сейчас человека, depth - глубина дерева
+* Функция минимакса рассматривает все возможные ходы начиная от текущего поля и до глубины depth, т.е. на depth ходов вперёд, ищёт среди них лучший
+* Возвращает: структуру с оптимальным для ходом
+*/
 pos* minmax(const Cheacker* Red, const Cheacker* White, int alpha, int beta, bool humanTurn, int depth = 0) {
     pos* back=nullptr;
     pos* cur=nullptr;
@@ -225,10 +344,10 @@ pos* minmax(const Cheacker* Red, const Cheacker* White, int alpha, int beta, boo
         }
         for (int i{}; i < 12; i++) {
             if (humanTurn == true && RedCopy[i].isAlive == true) {
-                
+
             }
             else if (humanTurn == false && WhiteCopy[i].isAlive == true) {
-            
+                
             }
         }
     }

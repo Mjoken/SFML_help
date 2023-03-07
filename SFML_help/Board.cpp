@@ -11,6 +11,15 @@ struct pos {
     int next_x{};
     int next_y{};
     int mark{};
+    pos* CheackerToPos(Cheacker* a, int x_next, int y_next) {
+        if (this != nullptr) {
+            current_x = a->x;
+            current_y = a->y;
+            next_x = x_next;
+            next_y = y_next;
+            return this;
+        }
+    }
 };
 
 class Board {
@@ -192,6 +201,7 @@ Cheacker* FindMidleCheaker(pos* posCur, Cheacker* RedChecker, Cheacker* WhiteChe
     }
     return nullptr;
 }
+
 // Возникает вопрос, зачем нужно было выводить eqalFunction, кроме как для отладки, а если их удалить... зачем эта функция?
 /*--------------------конец блока---------------------------*/
 
@@ -211,7 +221,7 @@ bool inField(pos* posCur, int sizeField=8) {
 * Выдаёт: переменную логического типа, свободно или нет
 */
 bool isFreeNextPos(pos* posCur, Cheacker* RedChecker, Cheacker* WhiteChecker, int sizeField = 8) {
-    return boolFindChecker(posCur->next_x, posCur->next_y, RedChecker, WhiteChecker);
+    return !boolFindChecker(posCur->next_x, posCur->next_y, RedChecker, WhiteChecker);
 }
 /*
 * Принимает: структуру с положением шашки и её хода, струкутры с перечеслением шашек на поле и их атрибутов
@@ -219,8 +229,13 @@ bool isFreeNextPos(pos* posCur, Cheacker* RedChecker, Cheacker* WhiteChecker, in
 * Выдаёт: можем ли сделать ход
 */
 bool canMove(pos* posCur, Cheacker* RedChecker, Cheacker* WhiteChecker) {
-    if (inField(posCur)&& isFreeNextPos(posCur, RedChecker, WhiteChecker) || FindMidleCheaker(posCur, RedChecker, WhiteChecker)!=nullptr) {
-        return true;
+    if (inField(posCur) && isFreeNextPos(posCur, RedChecker, WhiteChecker)) {
+        if (abs(posCur->next_x - posCur->current_x) < 2 && abs(posCur->next_y - posCur->current_y) < 2) {
+            return true;
+        }
+        else if (FindMidleCheaker(posCur, RedChecker, WhiteChecker) != nullptr) {
+            return true;
+        }
     }
      return false;
 }
@@ -322,32 +337,200 @@ int MoveChecker(int x, int y, Cheacker* s_checker, Cheacker* RedChecker, Cheacke
    }
    return 0;
 }
+/*
+* 
+* 
+*/
+int MoveChecker(int x, int y, Cheacker* s_checker, Cheacker* RedChecker, Cheacker* WhiteChecker) {
+    if (s_checker->color == sf::Color::Red || s_checker->color == sf::Color::White && s_checker->queen) {
+        if (x == s_checker->x - 1 && y == s_checker->y - 1) {
+            if (!FindChecker(x, y, RedChecker, WhiteChecker)) {               
+                s_checker->x = x;
+                s_checker->y = y;
+                return 1;
+            }
+        }
+        if (x == s_checker->x + 1 && y == s_checker->y - 1) {
+            if (!FindChecker(x, y, RedChecker, WhiteChecker)) {           
+                s_checker->x = x;
+                s_checker->y = y;
+                return 1;
+            }
+        }
+        if (x == s_checker->x - 2 && y == s_checker->y - 2) {
+            if (!FindChecker(x, y, RedChecker, WhiteChecker) && FindChecker(x + 1, y + 1, RedChecker, WhiteChecker) != NULL && FindChecker(x + 1, y + 1, RedChecker, WhiteChecker)->color != s_checker->color) {
+                KillCheacker(x + 1, y + 1, RedChecker, WhiteChecker);
+                s_checker->x = x;
+                s_checker->y = y;
+                return 1;
+            }
+        }
+        if (x == s_checker->x + 2 && y == s_checker->y - 2) {
+            if (!FindChecker(x, y, RedChecker, WhiteChecker) && FindChecker(x - 1, y + 1, RedChecker, WhiteChecker) != NULL && FindChecker(x - 1, y + 1, RedChecker, WhiteChecker)->color != s_checker->color) {
+                KillCheacker(x - 1, y + 1, RedChecker, WhiteChecker);
+                s_checker->x = x;
+                s_checker->y = y;
+                return 1;
+            }
+        }
+    }
+    if (s_checker->color == sf::Color::White || s_checker->color == sf::Color::Red && s_checker->queen) {
+        if (x == s_checker->x - 1 && y == s_checker->y + 1) {
+            if (!FindChecker(x, y, RedChecker, WhiteChecker)) {
+                s_checker->x = x;
+                s_checker->y = y;
+                return 1;
+            }
+        }
+        if (x == s_checker->x + 1 && y == s_checker->y + 1) {
+            if (!FindChecker(x, y, RedChecker, WhiteChecker)) {
+                s_checker->x = x;
+                s_checker->y = y;
+                return 1;
+            }
+        }
+        if (x == s_checker->x - 2 && y == s_checker->y + 2) {
+            if (!FindChecker(x, y, RedChecker, WhiteChecker) && FindChecker(x + 1, y - 1, RedChecker, WhiteChecker) != NULL && FindChecker(x + 1, y - 1, RedChecker, WhiteChecker)->color != s_checker->color) {
+                s_checker->x = x;
+                s_checker->y = y;
 
+                KillCheacker(x + 1, y - 1, RedChecker, WhiteChecker);
+                return 1;
+            }
+        }
+        if (x == s_checker->x + 2 && y == s_checker->y + 2) {
+            if (!FindChecker(x, y, RedChecker, WhiteChecker) && FindChecker(x - 1, y - 1, RedChecker, WhiteChecker) != NULL && FindChecker(x - 1, y - 1, RedChecker, WhiteChecker)->color != s_checker->color) {
+                s_checker->x = x;
+                s_checker->y = y;
+
+                KillCheacker(x - 1, y - 1, RedChecker, WhiteChecker);
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+
+void Copy(const Cheacker* Red, Cheacker* RedCopy, const Cheacker* White, Cheacker* WhiteCopy) {
+    for (int i{}; i < 12; i++) {
+        RedCopy[i] = Red[i];
+        WhiteCopy[i] = White[i];
+    }
+}
+/*
+* Принимает: Две структуры типа pos, содержаште текуший и следующий ход, 
+* Сравнивает оценку двух стркутур
+* Возвращает: структуру с меньшей оценкой
+*/
+pos* min(pos* a1, pos* a2)
+{
+    if (a1 == nullptr) {
+        return a2;
+    }
+    if (a2 == nullptr) {
+        return a1;
+    }
+    if (a1->mark == a2->mark) {
+        return a1;
+    }
+    return a1->mark < a2->mark ? a1 : a2;
+}
+/*
+* Принимает: Две структуры типа pos, содержаште текуший и следующий ход,
+* Сравнивает оценку двух стркутур
+* Возвращает: структуру с большей оценкой
+*/
+pos* max(pos* a1, pos* a2)
+{
+    if (a1 == nullptr) {
+        return a2;
+    }
+    if (a2 == nullptr) {
+        return a1;
+    }
+    if (a1->mark == a2->mark) {
+        return a1;
+    }
+    return a1->mark > a2->mark ? a1 : a2;
+}
+
+/*
+* Принимает:
+* Использует алгоритм минимакса
+* Возвращает:
+*/
+int alphabeta(pos* cur, pos* back, bool turn) {
+    if (turn == true) {		// ход человека
+        cur = min(cur, back);
+        return cur->mark;
+    }
+    else if (turn == false) { // ход компьютера
+        cur = max(cur, back);
+        return cur->mark;
+    }
+}
 /*
 * Принимает: Red - массив шашек красного цвета, White - массив шашек белого цвета, alpha - нижняя альфа граница, beta - верхняя бета граница, humanTurn - ход ли сейчас человека, depth - глубина дерева
 * Функция минимакса рассматривает все возможные ходы начиная от текущего поля и до глубины depth, т.е. на depth ходов вперёд, ищёт среди них лучший
 * Возвращает: структуру с оптимальным для ходом
 */
-pos* minmax(const Cheacker* Red, const Cheacker* White, int alpha, int beta, bool humanTurn, int depth = 0) {
-    pos* back=nullptr;
-    pos* cur=nullptr;
-    if (depth == 3) {
-        cur = new pos();
+pos* minmax(const Cheacker* Red, const Cheacker* White, int alpha=-9999, int beta=9999, bool humanTurn=false, int depth = 0) {
+    pos* back = new pos;
+    pos* cur = nullptr;
+    if (depth == 5) {
+        cur = new pos;
         cur->mark = eqalFunction(Red, White);
     }
     else {
         Cheacker* RedCopy = new Cheacker[12];
         Cheacker* WhiteCopy = new Cheacker[12];
-        for (int i{}; i < 12; i++) {
-            RedCopy[i] = Red[i];
-            WhiteCopy[i] = White[i];
-        }
-        for (int i{}; i < 12; i++) {
+        Copy(Red, RedCopy, White, WhiteCopy);
+        for (int i{0}; i < 12; i++) {
             if (humanTurn == true && RedCopy[i].isAlive == true) {
-
+                for (int j{1}; j <=2; j++){
+                    if (canMove(back->CheackerToPos(RedCopy + i, RedCopy[i].x - j, RedCopy[i].y - j), RedCopy, WhiteCopy))
+                    {
+                        MoveChecker(RedCopy[i].x - j, RedCopy[i].y - j, RedCopy + i, RedCopy, WhiteCopy);
+                        //Move(back->CheackerToPos(RedCopy + i, RedCopy[i].x - j, RedCopy[i].y - j), RedCopy, WhiteCopy);
+                        back = minmax(RedCopy, WhiteCopy, alpha, beta, !humanTurn, depth + 1);
+                        cur = min(cur, back);
+                        beta = alphabeta(cur, back, humanTurn);
+                        if (alpha >= beta) { break; }
+                        Copy(Red, RedCopy, White, WhiteCopy);
+                    }
+                    if (canMove(back->CheackerToPos(RedCopy + i, RedCopy[i].x + j, RedCopy[i].y - j), RedCopy, WhiteCopy)) {
+                        MoveChecker(RedCopy[i].x + j, RedCopy[i].y - j, RedCopy + i, RedCopy, WhiteCopy);
+                        //Move(back->CheackerToPos(RedCopy + i, RedCopy[i].x - j, RedCopy[i].y + j), RedCopy, WhiteCopy);
+                        back = minmax(RedCopy, WhiteCopy, alpha, beta, !humanTurn, depth + 1);
+                        cur = min(cur, back);
+                        beta = alphabeta(cur, back, humanTurn);
+                        if (alpha >= beta) { break; }
+                        Copy(Red, RedCopy, White, WhiteCopy);
+                    }
+                }
             }
             else if (humanTurn == false && WhiteCopy[i].isAlive == true) {
-                
+                for (int j{ 1 }; j <= 2; j++) {
+                    if (canMove(back->CheackerToPos(WhiteCopy + i, WhiteCopy[i].x - j, WhiteCopy[i].y + j), RedCopy, WhiteCopy)) {
+                        MoveChecker(WhiteCopy[i].x - j, WhiteCopy[i].y + j, WhiteCopy + i, RedCopy, WhiteCopy);
+                        //Move(back->CheackerToPos(WhiteCopy + i, WhiteCopy[i].x + j, WhiteCopy[i].y - j), RedCopy, WhiteCopy);
+                        back = minmax(RedCopy, WhiteCopy, alpha, beta, !humanTurn, depth + 1);
+                        cur = max(cur, back);
+                        alpha = alphabeta(cur, back, humanTurn);
+                        if (alpha >= beta) { break; }
+                        Copy(Red, RedCopy, White, WhiteCopy);
+                    }
+                    if (canMove(back->CheackerToPos(WhiteCopy + i, WhiteCopy[i].x + j, WhiteCopy[i].y + j), RedCopy, WhiteCopy)) {
+                        MoveChecker(WhiteCopy[i].x + j, WhiteCopy[i].y + j, WhiteCopy + i, RedCopy, WhiteCopy);
+                        //Move(back->CheackerToPos(WhiteCopy + i, WhiteCopy[i].x + j, WhiteCopy[i].y + j), RedCopy, WhiteCopy);
+                        back = minmax(RedCopy, WhiteCopy, alpha, beta, !humanTurn, depth + 1);
+                        cur = max(cur, back);
+                        alpha = alphabeta(cur, back, humanTurn);
+                        if (alpha >= beta) { break; }
+                        Copy(Red, RedCopy, White, WhiteCopy);
+                    }
+                }
             }
         }
     }
@@ -362,6 +545,7 @@ pos* minmax(const Cheacker* Red, const Cheacker* White, int alpha, int beta, boo
 //        std::cout << std::endl;
 //    }
 //}
+
 int main()
 {
   /* sf::ContextSettings settings;
@@ -396,6 +580,21 @@ int main()
                selected = !selected;
             }
          }
+         /*
+         * Отладочная информация о количестве шашек
+         */
+         if (event.type == sf::Event::KeyPressed) {
+             if (event.key.code == sf::Keyboard::F2) {
+                 std::cout << "RedCheackers:" << ":" << std::endl;
+                 for (size_t i{}; i < 12; i++) {
+                     std::cout << i << " = (" << RedCheacker[i].x+1 << ":" << RedCheacker[i].y+1 << "), isAlive:" << RedCheacker[i].isAlive<< std::endl;
+                 }
+                 std::cout << "WhiteCheackers:" << ":" << std::endl;
+                 for (size_t i{}; i < 12; i++) {
+                     std::cout << i << " = (" << WhiteCheacker[i].x+1 << ":" << WhiteCheacker[i].y+1 << "), isAlive:" << WhiteCheacker[i].isAlive << std::endl;
+                 }
+            }
+         }
       }
 
       window.clear();
@@ -427,6 +626,10 @@ int main()
             selected = false;
          }
          else if (SelectedPiece != NULL && MoveChecker(x, y, SelectedPiece, RedCheacker, WhiteCheacker, &turn)) {
+             if (turn == 2) { 
+                 pos* temp = minmax(RedCheacker, WhiteCheacker); //Смотри на массивы, он не видит шашек там, где они есть.
+                 std::cout <<"Current:("<< temp->current_x+1 <<":" << temp->current_y+1 <<")" <<"Next:(" << temp->next_x+1 <<":" << temp->next_y+1 <<")" << std::endl;
+             }
             selected = false;
             SelectedPiece = NULL;
          }
